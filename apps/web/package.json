@@ -1,0 +1,52 @@
+{
+  "name": "@edusure/web",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio"
+  },
+  "dependencies": {
+    "next": "^14.2.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "@tanstack/react-query": "^5.40.0",
+    "framer-motion": "^11.2.0",
+    "three": "^0.165.0",
+    "@react-three/fiber": "^8.16.0",
+    "@react-three/drei": "^9.109.0",
+    "zod": "^3.23.0",
+    "react-hook-form": "^7.52.0",
+    "@hookform/resolvers": "^3.4.0",
+    "clsx": "^2.1.0",
+    "tailwind-merge": "^2.3.0",
+    "lucide-react": "^0.400.0",
+    "@edusure/ui": "workspace:*",
+    "@edusure/db": "workspace:*",
+    "@edusure/auth": "workspace:*",
+    "@edusure/ai": "workspace:*",
+    "@edusure/video": "workspace:*",
+    "@edusure/messaging": "workspace:*",
+    "@edusure/notifications": "workspace:*",
+    "@edusure/analytics": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@types/three": "^0.165.0",
+    "tailwindcss": "^3.4.0",
+    "postcss": "^8.4.0",
+    "autoprefixer": "^10.4.0",
+    "prisma": "^5.15.0",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.0"
+  }
+}

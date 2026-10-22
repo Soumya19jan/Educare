@@ -1,0 +1,344 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// USER & AUTHENTICATION
+// ============================================================================
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  TEACHER
+  STUDENT
+  PARENT
+  STAFF
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  emailVerified   DateTime?
+  password        String
+  firstName       String
+  lastName        String
+  avatar          String?
+  phone           String?
+  phoneVerified   DateTime?
+  dateOfBirth     DateTime?
+  gender          String?
+  role            UserRole  @default(STUDENT)
+  isActive        Boolean   @default(true)
+  isSuspended     Boolean   @default(false)
+  lastLoginAt     DateTime?
+  
+  institutionId   String?
+  institution     Institution? @relation("InstitutionUsers", fields: [institutionId], references: [id], onDelete: SetNull)
+  
+  mfaSecret       String?
+  mfaEnabled      Boolean   @default(false)
+  
+  sessions        Session[]
+  refreshTokens   RefreshToken[]
+  student         Student?
+  teacher         Teacher?
+  parent          Parent?
+  sentMessages    Message[] @relation("MessageSender")
+  conversations   Conversation[] @relation("ConversationParticipants")
+  notifications   Notification[]
+  aiConversations AIConversation[]
+  auditLogs       AuditLog[]
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([institutionId])
+  @@index([role])
+}
+
+model Session {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token       String   @unique
+  expiresAt   DateTime
+  ipAddress   String?
+  userAgent   String?
+  isValid     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+  @@index([token])
+}
+
+model RefreshToken {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token       String    @unique
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  
+  @@index([userId])
+  @@index([token])
+}
+
+// ============================================================================
+// INSTITUTIONS
+// ============================================================================
+
+enum InstitutionType {
+  SCHOOL
+  COACHING_CENTER
+  TUITION
+  UNIVERSITY
+  TRAINING_CENTER
+}
+
+model Institution {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  type        InstitutionType
+  description String?
+  logo        String?
+  banner      String?
+  email       String
+  phone       String?
+  website     String?
+  address     String?
+  city        String?
+  state       String?
+  country     String?
+  timezone    String   @default("Asia/Kolkata")
+  language    String   @default("en")
+  currency    String   @default("INR")
+  primaryColor   String @default("#0099e6")
+  secondaryColor String @default("#4cb48c")
+  
+  subscriptionPlanId String?
+  subscriptionPlan   SubscriptionPlanModel? @relation(fields: [subscriptionPlanId], references: [id])
+  subscriptionStartDate DateTime?
+  subscriptionEndDate   DateTime?
+  isActive      Boolean  @default(true)
+  isSuspended   Boolean  @default(false)
+  
+  users          User[]          @relation("InstitutionUsers")
+  academicYears  AcademicYear[]
+  grades         Grade[]
+  subjects       Subject[]
+  courses        Course[]
+  announcements  Announcement[]
+  settings       InstitutionSettings?
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  @@index([slug])
+}
+
+model InstitutionSettings {
+  id                    String      @id @default(cuid())
+  institutionId         String      @unique
+  institution           Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  enableAI              Boolean     @default(true)
+  enableVideoClassrooms Boolean     @default(true)
+  enableAssignments     Boolean     @default(true)
+  enableAssessments     Boolean     @default(true)
+  enableMessaging       Boolean     @default(true)
+  enableParentPortal    Boolean     @default(true)
+  recordingConsent      Boolean     @default(true)
+  recordingRetentionDays Int        @default(90)
+  
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+}
+
+enum SubscriptionPlan {
+  FREE
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+model SubscriptionPlanModel {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  maxUsers    Int      @default(50)
+  maxCourses  Int      @default(20)
+  enableAI    Boolean  @default(true)
+  enableVideo Boolean  @default(true)
+  enableAnalytics Boolean @default(true)
+  priceMonthly Float   @default(0)
+  
+  institutions Institution[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============================================================================
+// ACADEMIC STRUCTURE
+// ============================================================================
+
+model AcademicYear {
+  id            String      @id @default(cuid())
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  name          String
+  startDate     DateTime
+  endDate       DateTime
+  isCurrent     Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  @@index([institutionId])
+}
+
+model Grade {
+  id            String      @id @default(cuid())
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  name          String
+  order         Int
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  students      Student[]
+  @@index([institutionId])
+}
+
+model Subject {
+  id            String      @id @default(cuid())
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  name          String
+  code          String?
+  description   String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  @@index([institutionId])
+}
+
+model Course {
+  id            String      @id @default(cuid())
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  name          String
+  description   String?
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  @@index([institutionId])
+}
+
+model Announcement {
+  id            String      @id @default(cuid())
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  title         String
+  content       String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  @@index([institutionId])
+}
+
+// ============================================================================
+// PEOPLE
+// ============================================================================
+
+model Student {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gradeId   String?
+  grade     Grade?   @relation(fields: [gradeId], references: [id])
+  rollNumber String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Teacher {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  employeeCode String?
+  designation  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Parent {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================================================
+// MESSAGING
+// ============================================================================
+
+model Conversation {
+  id           String    @id @default(cuid())
+  participants User[]    @relation("ConversationParticipants")
+  messages     Message[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  senderId       String
+  sender         User         @relation("MessageSender", fields: [senderId], references: [id])
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  content        String
+  createdAt      DateTime     @default(now())
+  @@index([senderId])
+  @@index([conversationId])
+}
+
+// ============================================================================
+// NOTIFICATIONS & AI
+// ============================================================================
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  @@index([userId])
+}
+
+model AIConversation {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([userId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  entity    String?
+  entityId  String?
+  meta      Json?
+  createdAt DateTime @default(now())
+  @@index([userId])
+}
+
+// ============================================================================

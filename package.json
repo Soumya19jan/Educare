@@ -1,0 +1,39 @@
+{
+  "name": "edusure",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:web": "turbo run dev --filter=@edusure/web",
+    "dev:auth": "turbo run dev --filter=@edusure/auth-backend",
+    "dev:parent": "turbo run dev --filter=@edusure/parent-backend",
+    "dev:teacher": "turbo run dev --filter=@edusure/teacher-backend",
+    "dev:student": "turbo run dev --filter=@edusure/student-backend",
+    "dev:backends": "turbo run dev --filter=*-backend",
+    "build": "turbo run build",
+    "build:web": "turbo run build --filter=@edusure/web",
+    "build:auth": "turbo run build --filter=@edusure/auth-backend",
+    "build:parent": "turbo run build --filter=@edusure/parent-backend",
+    "build:teacher": "turbo run build --filter=@edusure/teacher-backend",
+    "build:student": "turbo run build --filter=@edusure/student-backend",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "db:generate": "turbo run db:generate",
+    "db:push": "turbo run db:push",
+    "db:migrate": "turbo run db:migrate",
+    "db:studio": "turbo run db:studio"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "turbo": "^2.0.0",
+    "typescript": "^5.4.0"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "dependencies": {
+    "@nestjs/config": "^12.0.1"
+  }
+}
